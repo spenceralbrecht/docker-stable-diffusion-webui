@@ -19,7 +19,8 @@
 
 ### 1.1 Building `stable-diffusion-webui` Docker Image
 
-You will first need to enable [Docker BuildKit](https://docs.docker.com/build/buildkit/) by setting the following environment variable `DOCKER_BUILDKIT=1` and then making sure the file `/etc/docker/daemon.json` exists and has the following contents
+You will first need to enable [Docker BuildKit](https://docs.docker.com/build/buildkit/) by setting the following environment variable `DOCKER_BUILDKIT=1` which will allow stages to run concurrently. 
+If you have a path `/etc/docker/` in the environment you are running this in then make sure the file `/etc/docker/daemon.json` exists and has the following contents
 ```
 {
   "features": {
@@ -28,6 +29,8 @@ You will first need to enable [Docker BuildKit](https://docs.docker.com/build/bu
 }
 ```
 
+### Download a model to use 
+`wget -O ./models/ https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors`
 
 ```shell
 DOCKER_BUILDKIT=1 
@@ -51,6 +54,26 @@ sudo docker build --no-cache \
   - Instead of setting a port, you can use `--net host` which makes container to use host network adapter
 - Mount any settings file or volume based on your need
   - Example command below contains all common possible options
+
+## V4
+```shell
+sudo docker run --gpus all -it --rm --name stable-diffusion-webui \
+  --privileged \
+  -e NVIDIA_DISABLE_REQUIRE=1 \
+  -e NVIDIA_DRIVER_CAPABILITIES=all \
+  -e UID=$(id -u) \
+  -e GID=$(id -g) \
+  -e DIR_GRADIO_AUTH=/run/secrets/gradio_auth \
+  -v /outputs:/home/user/stable-diffusion-webui/outputs \
+  -v /styles:/home/user/stable-diffusion-webui/styles \
+  -v /extensions:/home/user/stable-diffusion-webui/models/extensions \
+  -v /VAE:/home/user/stable-diffusion-webui/models/VAE \
+  -v $(pwd)/config.json:/home/user/stable-diffusion-webui/config.json \
+  -v $(pwd)/webui-user.sh:/home/user/stable-diffusion-webui/webui-user.sh \
+  -v /path/to/your/secrets/gradio_auth.txt:/run/secrets/gradio_auth \
+  -p 80:7860 \
+  kestr3l/stable-diffusion-webui:1.2.2
+```
 
 ## V3
 ```shell

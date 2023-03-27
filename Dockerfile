@@ -65,14 +65,10 @@ USER user
 
 # CLONE AND PREPARE FOR THE SETUP OF SD-WEBUI
 RUN \ 
-    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git \
     # CHECKOUT TO COMMIT a9eab236d7e8afa4d6205127904a385b2c43bb24
-    # && git -C /home/user/stable-diffusion-webui \
-
-COPY models/v1-5-pruned-emaonly.safetensors /home/user/stable-diffusion-webui/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
-
-RUN \
-    sed -i \
+    # && git -C /home/user/stable-diffusion-webui reset --hard 7f4d774eb650c8a3324f28945e5e743c905caa50 \
+    && sed -i \
         "s/#export COMMANDLINE_ARGS=\"\"/export COMMANDLINE_ARGS=\"\
             --listen \
             --xformers \
@@ -91,7 +87,14 @@ COPY --chmod=777 --chown=user:user \
     scripts/setup.sh /tmp/setup.sh
 
 RUN \
-    COMMANDLINE_ARGS="--skip-torch-cuda-test --no-download-sd-model" \
+    wget -O \
+        /home/user/stable-diffusion-webui/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors \
+        https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors \
+    && COMMANDLINE_ARGS="--skip-torch-cuda-test --no-download-sd-model" \
+        /home/user/stable-diffusion-webui/webui.sh \
+    & /tmp/setup.sh \
+    && rm -rf /tmp/* \
+    && COMMANDLINE_ARGS="--skip-torch-cuda-test --no-download-sd-model" \
     && /tmp/setup.sh \
     && rm -rf /tmp/*
 
