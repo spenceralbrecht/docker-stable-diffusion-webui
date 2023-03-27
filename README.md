@@ -19,11 +19,23 @@
 
 ### 1.1 Building `stable-diffusion-webui` Docker Image
 
+You will first need to enable [Docker BuildKit](https://docs.docker.com/build/buildkit/) by setting the following environment variable `DOCKER_BUILDKIT=1` and then making sure the file `/etc/docker/daemon.json` exists and has the following contents
+```
+{
+  "features": {
+    "buildkit" : true
+  }
+}
+```
+
+
 ```shell
-DOCKER_BUILDKIT=1 docker build --no-cache \
+DOCKER_BUILDKIT=1 
+
+sudo docker build --no-cache \
 --build-arg BASEIMAGE=nvidia/cuda \
 --build-arg BASETAG=11.7.1-devel-ubuntu20.04 \
--t kestr3l/stable-diffusion-webui:1.1.0 \
+-t spencer/stable-diffusion-webui:1.0.0 \
 -f Dockerfile .
 ```
 
@@ -40,6 +52,46 @@ DOCKER_BUILDKIT=1 docker build --no-cache \
 - Mount any settings file or volume based on your need
   - Example command below contains all common possible options
 
+## V3
+```shell
+sudo docker run --gpus all -it --rm --name stable-diffusion-webui \
+  --privileged \
+  -e NVIDIA_DISABLE_REQUIRE=1 \
+  -e NVIDIA_DRIVER_CAPABILITIES=all \
+  -e UID=$(id -u) \
+  -e GID=$(id -g) \
+  -e DIR_GRADIO_AUTH=/run/secrets/gradio_auth \
+  -v /outputs:/home/user/stable-diffusion-webui/outputs \
+  -v /styles:/home/user/stable-diffusion-webui/styles \
+  -v /models:/home/user/stable-diffusion-webui/models \
+  -v /extensions:/home/user/stable-diffusion-webui/models/extensions \
+  -v /VAE:/home/user/stable-diffusion-webui/models/VAE \
+  -v $(pwd)/config.json:/home/user/stable-diffusion-webui/config.json \
+  -v /path/to/your/secrets/gradio_auth.txt:/run/secrets/gradio_auth \
+  -p 80:7860 \
+  spencer/stable-diffusion-webui:1.0.0
+```
+## V2
+```shell
+sudo docker run -it --rm --name stable-diffusion-webui \
+  --privileged \
+  -e NVIDIA_DISABLE_REQUIRE=1 \
+  -e NVIDIA_DRIVER_CAPABILITIES=all \
+  -e UID=$(id -u) \
+  -e GID=$(id -g) \
+  -e DIR_GRADIO_AUTH=/run/secrets/gradio_auth \
+  -v /models:/home/user/stable-diffusion-webui/models/Stable-diffusion \
+  -v /outputs:/home/user/stable-diffusion-webui/outputs \
+  -v /styles:/home/user/stable-diffusion-webui/styles \
+  -v /extensions:/home/user/stable-diffusion-webui/models/extensions \
+  -v /VAE:/home/user/stable-diffusion-webui/models/VAE \
+  -v config.json:/home/user/stable-diffusion-webui/config.json \
+  -v webui-user.sh:/home/user/stable-diffusion-webui/webui-user.sh \
+  -v /path/to/your/secrets/gradio_auth.txt:/run/secrets/gradio_auth \
+  -p 80:7860 \
+  kestr3l/stable-diffusion-webui:1.2.0
+```
+## V1
 ```shell
 docker run -it --rm \
     --name stable-diffusion-webui \
